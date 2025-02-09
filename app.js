@@ -232,16 +232,22 @@ async function loadTodoListFromQuery() {
       return;
     }
     
+    // If the record indicates it is encoded, prompt for a password.
     if (record.encodedData) {
-      const password = prompt("This todo list is encoded. Please enter the password or PIN to decode:");
+      const password = prompt("This todo list is password protected. Please enter the password or PIN:");
       if (password === null || password.trim() === "") {
-        showMessage("Password/PIN required to decode the data.", "error");
+        showMessage("Password/PIN is required to decode the data.", "error");
         return;
       }
-      const decoded = decodeData(record.encodedData, password.trim());
-      listLabelInput.value = decoded.label || "";
-      todos = decoded.todos || [];
-      showMessage("Todo list decoded and loaded.", "info");
+      try {
+        const decoded = decodeData(record.encodedData, password.trim());
+        listLabelInput.value = decoded.label || "";
+        todos = decoded.todos || [];
+        showMessage("Todo list decoded and loaded.", "info");
+      } catch (error) {
+        // Error message already shown in decodeData helper
+        return;
+      }
     } else {
       listLabelInput.value = record.label || "";
       todos = record.todos || [];
