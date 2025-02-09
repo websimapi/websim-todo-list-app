@@ -8,6 +8,7 @@ const todoList = document.getElementById('todo-list');
 const listLabelInput = document.getElementById('list-label');
 const uploadListBtn = document.getElementById('upload-list-btn');
 const encodeDataCheckbox = document.getElementById('encode-data');
+const messageArea = document.getElementById('message');
 
 let todos = [];
 
@@ -26,6 +27,17 @@ function createElement(type, options = {}) {
     el.textContent = options.text;
   }
   return el;
+}
+
+// Function to show messages in the UI (info or error)
+function showMessage(msg, type = "info") {
+  messageArea.textContent = msg;
+  messageArea.className = "message-area " + type;
+  messageArea.style.display = "block";
+  // Automatically hide message after 4 seconds
+  setTimeout(() => {
+    messageArea.style.display = "none";
+  }, 4000);
 }
 
 // Render the todo list
@@ -69,7 +81,10 @@ function renderTodos() {
 // Add todo item and locally update list
 async function addTodo() {
   const text = todoInput.value.trim();
-  if (text === "") return;
+  if (text === "") {
+    showMessage("Please enter a task.", "error");
+    return;
+  }
   const newTodo = { text, completed: false };
 
   // Add to local list and render immediately
@@ -82,16 +97,12 @@ async function addTodo() {
 function toggleComplete(index) {
   todos[index].completed = !todos[index].completed;
   renderTodos();
-  // Optionally, persist the update with:
-  // room.collection('todo').update(todoId, { completed: todos[index].completed });
 }
 
 // Delete todo item and update the local list
 function deleteTodo(index) {
   todos.splice(index, 1);
   renderTodos();
-  // Optionally, persist deletion with:
-  // room.collection('todo').delete(todoId);
 }
 
 // Utility function to encode data (using Base64 encoding optionally concatenated with password)
@@ -110,13 +121,14 @@ function decodeData(encodedStr, password = "") {
       if (decodedStr.startsWith(prefix)) {
         decodedStr = decodedStr.substring(prefix.length);
       } else {
-        alert("Incorrect password!");
+        showMessage("Incorrect password!", "error");
         throw new Error("Incorrect password");
       }
     }
     return JSON.parse(atob(decodedStr));
   } catch (error) {
     console.error("Error decoding data:", error);
+    showMessage("Error decoding data.", "error");
     throw error;
   }
 }
@@ -125,11 +137,11 @@ function decodeData(encodedStr, password = "") {
 async function uploadTodoList() {
   const label = listLabelInput.value.trim();
   if (label === "") {
-    alert("Please enter a label for your todo list.");
+    showMessage("Please enter a label for your todo list.", "error");
     return;
   }
   if (todos.length === 0) {
-    alert("Your todo list is empty. Add some tasks first!");
+    showMessage("Your todo list is empty. Add some tasks first!", "error");
     return;
   }
 
@@ -144,7 +156,7 @@ async function uploadTodoList() {
   if (encodeDataCheckbox.checked) {
     const password = prompt("Enter a password or PIN to encode your data:");
     if (password === null || password.trim() === "") {
-      alert("Password/PIN is required for encoding.");
+      showMessage("Password/PIN is required for encoding.", "error");
       return;
     }
     finalPayload = { encodedData: encodeData(payload, password.trim()) };
@@ -152,11 +164,11 @@ async function uploadTodoList() {
 
   try {
     const createdRecord = await room.collection('todoList').create(finalPayload);
-    alert("Todo list uploaded successfully!");
+    showMessage("Todo list uploaded successfully!", "info");
     
-    // Use the provided base URL with query string for sharing
+    // Construct the sharing URL using the provided base URL and query string
     const shareUrl = `https://websim.ai/@api/todo-list-app/?list=${createdRecord.id}`;
-    alert(`Share this URL with others: ${shareUrl}`);
+    showMessage("Share this URL with others: " + shareUrl, "info");
     
     // Optionally clear the list or label after upload
     todos = [];
@@ -164,7 +176,7 @@ async function uploadTodoList() {
     listLabelInput.value = "";
   } catch (error) {
     console.error('Error uploading todo list:', error);
-    alert("Failed to upload the todo list. Please try again.");
+    showMessage("Failed to upload the todo list. Please try again.", "error");
   }
 }
 
@@ -184,27 +196,29 @@ async function loadTodoListFromQuery() {
     }
 
     if (!record) {
-      alert("Todo list not found.");
+      showMessage("Todo list not found.", "error");
       return;
     }
     
     if (record.encodedData) {
       const password = prompt("This todo list is encoded. Please enter the password or PIN to decode:");
       if (password === null || password.trim() === "") {
-        alert("Password/PIN required to decode the data.");
+        showMessage("Password/PIN required to decode the data.", "error");
         return;
       }
       const decoded = decodeData(record.encodedData, password.trim());
       listLabelInput.value = decoded.label || "";
       todos = decoded.todos || [];
+      showMessage("Todo list decoded and loaded.", "info");
     } else {
       listLabelInput.value = record.label || "";
       todos = record.todos || [];
+      showMessage("Todo list loaded.", "info");
     }
     renderTodos();
   } catch (error) {
     console.error("Error loading todo list from database:", error);
-    alert("Failed to load the specified todo list.");
+    showMessage("Failed to load the specified todo list.", "error");
   }
 }
 
