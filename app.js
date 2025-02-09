@@ -1,4 +1,7 @@
 // Using ES modules and modern JavaScript
+// Initialize the WebsimSocket instance to handle realtime database operations
+const room = new WebsimSocket();
+
 const todoInput = document.getElementById('todo-input');
 const addTodoBtn = document.getElementById('add-todo-btn');
 const todoList = document.getElementById('todo-list');
@@ -60,25 +63,40 @@ function renderTodos() {
   });
 }
 
-// Add todo item
-function addTodo() {
+// Add todo item and persist to the database
+async function addTodo() {
   const text = todoInput.value.trim();
   if (text === "") return;
-  todos.push({ text, completed: false });
-  todoInput.value = "";
+  const newTodo = { text, completed: false };
+  
+  // Add to local list and render immediately
+  todos.push(newTodo);
   renderTodos();
+  todoInput.value = "";
+
+  // Persist the todo entry to the database using WebsimSocket's collection API
+  try {
+    await room.collection('todo').create(newTodo);
+    console.log('Todo saved:', newTodo);
+  } catch (error) {
+    console.error('Error saving todo:', error);
+  }
 }
 
-// Toggle todo completion
+// Toggle todo completion and update the database if needed
 function toggleComplete(index) {
   todos[index].completed = !todos[index].completed;
   renderTodos();
+  // Optionally, you could persist the update here with:
+  // room.collection('todo').update(todoId, { completed: todos[index].completed });
 }
 
-// Delete todo item
+// Delete todo item and update the database if needed
 function deleteTodo(index) {
-  todos.splice(index, 1);
+  const removed = todos.splice(index, 1)[0];
   renderTodos();
+  // Optionally, you could persist the deletion here with:
+  // room.collection('todo').delete(todoId);
 }
 
 // Event listeners
