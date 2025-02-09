@@ -197,8 +197,23 @@ async function uploadTodoList() {
   }
 }
 
+// Utility function to wait for the room to be connected
+function waitForRoomConnection() {
+  return new Promise((resolve) => {
+    const interval = setInterval(() => {
+      // Check if the underlying WebSocket exists and is open
+      if (room.socket && room.socket.readyState === WebSocket.OPEN) {
+        clearInterval(interval);
+        resolve();
+      }
+    }, 100);
+  });
+}
+
 // Check for query parameter ?list=ID and load that todo list from the database
 async function loadTodoListFromQuery() {
+  await waitForRoomConnection();
+
   const params = new URLSearchParams(window.location.search);
   const listId = params.get('list');
   if (!listId) return;
@@ -249,5 +264,5 @@ uploadListBtn.addEventListener('click', uploadTodoList);
 // Initial render
 renderTodos();
 
-// Check for query string ?list=ID on page load
+// Wait for DOM content and database connection, then check for query string ?list=ID
 document.addEventListener('DOMContentLoaded', loadTodoListFromQuery);
