@@ -9,6 +9,7 @@ const listLabelInput = document.getElementById('list-label');
 const uploadListBtn = document.getElementById('upload-list-btn');
 const encodeDataCheckbox = document.getElementById('encode-data');
 const messageArea = document.getElementById('message');
+const shareUrlContainer = document.getElementById('share-url');
 
 let todos = [];
 
@@ -133,6 +134,18 @@ function decodeData(encodedStr, password = "") {
   }
 }
 
+// Copy the provided text to clipboard and show confirmation
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text)
+    .then(() => {
+      showMessage("URL copied to clipboard!", "info");
+    })
+    .catch((error) => {
+      console.error("Failed to copy URL:", error);
+      showMessage("Failed to copy URL.", "error");
+    });
+}
+
 // Upload the entire todo list with a custom label as one record
 async function uploadTodoList() {
   const label = listLabelInput.value.trim();
@@ -168,8 +181,12 @@ async function uploadTodoList() {
     
     // Construct the sharing URL using the provided base URL and query string
     const shareUrl = `https://websim.ai/@api/todo-list-app/?list=${createdRecord.id}`;
-    showMessage("Share this URL with others: " + shareUrl, "info");
+    shareUrlContainer.textContent = shareUrl;
+    shareUrlContainer.style.display = "block";
     
+    // Add click event to copy the URL to clipboard
+    shareUrlContainer.onclick = () => copyToClipboard(shareUrl);
+
     // Optionally clear the list or label after upload
     todos = [];
     renderTodos();

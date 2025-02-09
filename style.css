@@ -194,6 +194,18 @@ h1 {
   color: #721c24;
 }
 
+/* Styles for the share URL container */
+.share-url {
+  background: #e7f3fe;
+  color: #31708f;
+  padding: 10px;
+  border-radius: 4px;
+  text-align: center;
+  margin-top: 10px;
+  cursor: pointer;
+  user-select: all;
+}
+
 /* Mobile compatible adjustments */
 @media (max-width: 480px) {
   .container {
