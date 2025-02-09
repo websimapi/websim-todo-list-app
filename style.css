@@ -11,11 +11,12 @@ body {
   align-items: center;
   justify-content: center;
   min-height: 100vh;
+  padding: 10px;
 }
 
 .container {
   background: #fff;
-  width: 90%;
+  width: 100%;
   max-width: 400px;
   border-radius: 5px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
@@ -57,6 +58,7 @@ h1 {
   display: flex;
   align-items: center;
 }
+
 #add-todo-btn svg {
   fill: #fff;
   transform: scale(1);
@@ -107,15 +109,19 @@ h1 {
   padding: 5px;
   transition: transform 0.2s ease-in-out;
 }
+
 .btn:hover {
   transform: scale(1.2);
 }
+
 .btn.delete {
   color: #dc3545;
 }
+
 .btn.complete {
   color: #28a745;
 }
+
 .todo-completed .todo-text {
   text-decoration: line-through;
   color: #999;
@@ -124,17 +130,21 @@ h1 {
 /* Styles for the upload section */
 .upload-section {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   align-items: center;
+  justify-content: center;
 }
+
 #list-label {
-  flex: 1;
+  flex: 1 1 200px;
   padding: 10px;
   border: 1px solid #ddd;
   border-radius: 4px;
   outline: none;
   font-size: 16px;
 }
+
 #upload-list-btn {
   background: #007bff;
   border: none;
@@ -147,9 +157,11 @@ h1 {
   gap: 5px;
   transition: background 0.2s;
 }
+
 #upload-list-btn:hover {
   background: #0056b3;
 }
+
 #upload-list-btn svg {
   fill: #fff;
 }

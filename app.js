@@ -94,11 +94,13 @@ function deleteTodo(index) {
   // room.collection('todo').delete(todoId);
 }
 
-// Utility function to encode data (using Base64 encoding)
-function encodeData(data) {
-  // Convert object to JSON string then to Base64
+// Utility function to encode data (using Base64 encoding optionally concatenated with password)
+function encodeData(data, password = "") {
+  // Convert object to JSON string then encode with Base64
   const jsonString = JSON.stringify(data);
-  return btoa(jsonString);
+  // If password is provided, mix it in with the encoded data
+  const base64Data = btoa(jsonString);
+  return password ? btoa(password + ":" + base64Data) : base64Data;
 }
 
 // Upload the entire todo list with a custom label as one record
@@ -120,8 +122,17 @@ async function uploadTodoList() {
     created_at: new Date().toISOString()
   };
 
-  // If encode mode is enabled, encode the entire payload as a Base64 string
-  const finalPayload = encodeDataCheckbox.checked ? { encodedData: encodeData(payload) } : payload;
+  let finalPayload = payload;
+
+  // If encode mode is enabled, prompt for a password/pin and encode the entire payload
+  if (encodeDataCheckbox.checked) {
+    const password = prompt("Enter a password or PIN to encode your data:");
+    if (password === null || password.trim() === "") {
+      alert("Password/PIN is required for encoding.");
+      return;
+    }
+    finalPayload = { encodedData: encodeData(payload, password.trim()) };
+  }
 
   try {
     await room.collection('todoList').create(finalPayload);
