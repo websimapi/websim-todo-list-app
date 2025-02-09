@@ -173,3 +173,18 @@ h1 {
   gap: 5px;
   font-size: 14px;
 }
+
+/* Mobile compatible adjustments */
+@media (max-width: 480px) {
+  .container {
+    width: 90%;
+    padding: 15px;
+  }
+  #todo-input, #list-label {
+    font-size: 14px;
+    padding: 8px;
+  }
+  #add-todo-btn, #upload-list-btn {
+    padding: 8px 12px;
+  }
+}

@@ -103,6 +103,27 @@ function encodeData(data, password = "") {
   return password ? btoa(password + ":" + base64Data) : base64Data;
 }
 
+// Utility function to decode data that was encoded using encodeData
+function decodeData(encodedStr, password = "") {
+  try {
+    let decodedStr = atob(encodedStr);
+    // If password was used, ensure the prefix matches
+    if (password) {
+      const prefix = password + ":";
+      if (decodedStr.startsWith(prefix)) {
+        decodedStr = decodedStr.substring(prefix.length);
+      } else {
+        alert("Incorrect password!");
+        throw new Error("Incorrect password");
+      }
+    }
+    return JSON.parse(atob(decodedStr));
+  } catch (error) {
+    console.error("Error decoding data:", error);
+    throw error;
+  }
+}
+
 // Upload the entire todo list with a custom label as one record
 async function uploadTodoList() {
   const label = listLabelInput.value.trim();
@@ -147,6 +168,52 @@ async function uploadTodoList() {
   }
 }
 
+// Check for query parameter ?list=ID and load that todo list from the database
+async function loadTodoListFromQuery() {
+  const params = new URLSearchParams(window.location.search);
+  const listId = params.get('list');
+  if (!listId) return;
+
+  try {
+    // Assuming room.collection('todoList').get accepts an id to fetch a single record
+    // If not, you might need to filter by id from getList()
+    let record;
+    // Trying to get record by id; if not supported, use getList filtering:
+    if (room.collection('todoList').get) {
+      record = await room.collection('todoList').get(listId);
+    } else {
+      const records = room.collection('todoList').getList();
+      record = records.find(r => r.id === listId);
+    }
+
+    if (!record) {
+      alert("Todo list not found.");
+      return;
+    }
+    
+    // Check if the record has encodedData
+    if (record.encodedData) {
+      const password = prompt("This todo list is encoded. Please enter the password or PIN to decode:");
+      if (password === null || password.trim() === "") {
+        alert("Password/PIN required to decode the data.");
+        return;
+      }
+      const decoded = decodeData(record.encodedData, password.trim());
+      // Set the UI with decoded data
+      listLabelInput.value = decoded.label || "";
+      todos = decoded.todos || [];
+    } else {
+      // If it's not encoded, load directly
+      listLabelInput.value = record.label || "";
+      todos = record.todos || [];
+    }
+    renderTodos();
+  } catch (error) {
+    console.error("Error loading todo list from database:", error);
+    alert("Failed to load the specified todo list.");
+  }
+}
+
 // Event listeners
 addTodoBtn.addEventListener('click', addTodo);
 todoInput.addEventListener('keyup', (e) => {
@@ -156,3 +223,6 @@ uploadListBtn.addEventListener('click', uploadTodoList);
 
 // Initial render
 renderTodos();
+
+// Check for query string ?list=ID on page load
+document.addEventListener('DOMContentLoaded', loadTodoListFromQuery);
