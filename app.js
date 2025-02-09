@@ -5,6 +5,8 @@ const room = new WebsimSocket();
 const todoInput = document.getElementById('todo-input');
 const addTodoBtn = document.getElementById('add-todo-btn');
 const todoList = document.getElementById('todo-list');
+const listLabelInput = document.getElementById('list-label');
+const uploadListBtn = document.getElementById('upload-list-btn');
 
 let todos = [];
 
@@ -63,27 +65,19 @@ function renderTodos() {
   });
 }
 
-// Add todo item and persist to the database
+// Add todo item and locally update list
 async function addTodo() {
   const text = todoInput.value.trim();
   if (text === "") return;
   const newTodo = { text, completed: false };
-  
+
   // Add to local list and render immediately
   todos.push(newTodo);
   renderTodos();
   todoInput.value = "";
-
-  // Persist the todo entry to the database using WebsimSocket's collection API
-  try {
-    await room.collection('todo').create(newTodo);
-    console.log('Todo saved:', newTodo);
-  } catch (error) {
-    console.error('Error saving todo:', error);
-  }
 }
 
-// Toggle todo completion and update the database if needed
+// Toggle todo completion and update the local list
 function toggleComplete(index) {
   todos[index].completed = !todos[index].completed;
   renderTodos();
@@ -91,12 +85,43 @@ function toggleComplete(index) {
   // room.collection('todo').update(todoId, { completed: todos[index].completed });
 }
 
-// Delete todo item and update the database if needed
+// Delete todo item and update the local list
 function deleteTodo(index) {
-  const removed = todos.splice(index, 1)[0];
+  todos.splice(index, 1);
   renderTodos();
   // Optionally, you could persist the deletion here with:
   // room.collection('todo').delete(todoId);
+}
+
+// Upload the entire todo list with a custom label as one record
+async function uploadTodoList() {
+  const label = listLabelInput.value.trim();
+  if (label === "") {
+    alert("Please enter a label for your todo list.");
+    return;
+  }
+  if (todos.length === 0) {
+    alert("Your todo list is empty. Add some tasks first!");
+    return;
+  }
+
+  const payload = {
+    label,
+    todos,
+    created_at: new Date().toISOString()
+  };
+
+  try {
+    await room.collection('todoList').create(payload);
+    alert("Todo list uploaded successfully!");
+    // Optionally, clear the list or label here
+    todos = [];
+    renderTodos();
+    listLabelInput.value = "";
+  } catch (error) {
+    console.error('Error uploading todo list:', error);
+    alert("Failed to upload the todo list. Please try again.");
+  }
 }
 
 // Event listeners
@@ -104,6 +129,7 @@ addTodoBtn.addEventListener('click', addTodo);
 todoInput.addEventListener('keyup', (e) => {
   if (e.key === 'Enter') addTodo();
 });
-  
+uploadListBtn.addEventListener('click', uploadTodoList);
+
 // Initial render
 renderTodos();
