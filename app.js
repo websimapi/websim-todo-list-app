@@ -7,6 +7,7 @@ const addTodoBtn = document.getElementById('add-todo-btn');
 const todoList = document.getElementById('todo-list');
 const listLabelInput = document.getElementById('list-label');
 const uploadListBtn = document.getElementById('upload-list-btn');
+const encodeDataCheckbox = document.getElementById('encode-data');
 
 let todos = [];
 
@@ -93,6 +94,13 @@ function deleteTodo(index) {
   // room.collection('todo').delete(todoId);
 }
 
+// Utility function to encode data (using Base64 encoding)
+function encodeData(data) {
+  // Convert object to JSON string then to Base64
+  const jsonString = JSON.stringify(data);
+  return btoa(jsonString);
+}
+
 // Upload the entire todo list with a custom label as one record
 async function uploadTodoList() {
   const label = listLabelInput.value.trim();
@@ -105,14 +113,18 @@ async function uploadTodoList() {
     return;
   }
 
+  // Create payload
   const payload = {
     label,
     todos,
     created_at: new Date().toISOString()
   };
 
+  // If encode mode is enabled, encode the entire payload as a Base64 string
+  const finalPayload = encodeDataCheckbox.checked ? { encodedData: encodeData(payload) } : payload;
+
   try {
-    await room.collection('todoList').create(payload);
+    await room.collection('todoList').create(finalPayload);
     alert("Todo list uploaded successfully!");
     // Optionally, clear the list or label here
     todos = [];

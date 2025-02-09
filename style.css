@@ -153,3 +153,11 @@ h1 {
 #upload-list-btn svg {
   fill: #fff;
 }
+
+/* Styles for the encode toggle */
+.encode-toggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+}
