@@ -156,8 +156,14 @@ async function uploadTodoList() {
   }
 
   try {
-    await room.collection('todoList').create(finalPayload);
+    // Create the record in the database and retrieve the created record.
+    const createdRecord = await room.collection('todoList').create(finalPayload);
     alert("Todo list uploaded successfully!");
+    
+    // Show the final valid URL to share with others
+    const shareUrl = `${window.location.origin}${window.location.pathname}?list=${createdRecord.id}`;
+    alert(`Share this URL with others: ${shareUrl}`);
+    
     // Optionally, clear the list or label here
     todos = [];
     renderTodos();
