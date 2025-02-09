@@ -82,7 +82,7 @@ async function addTodo() {
 function toggleComplete(index) {
   todos[index].completed = !todos[index].completed;
   renderTodos();
-  // Optionally, you could persist the update here with:
+  // Optionally, persist the update with:
   // room.collection('todo').update(todoId, { completed: todos[index].completed });
 }
 
@@ -90,15 +90,13 @@ function toggleComplete(index) {
 function deleteTodo(index) {
   todos.splice(index, 1);
   renderTodos();
-  // Optionally, you could persist the deletion here with:
+  // Optionally, persist deletion with:
   // room.collection('todo').delete(todoId);
 }
 
 // Utility function to encode data (using Base64 encoding optionally concatenated with password)
 function encodeData(data, password = "") {
-  // Convert object to JSON string then encode with Base64
   const jsonString = JSON.stringify(data);
-  // If password is provided, mix it in with the encoded data
   const base64Data = btoa(jsonString);
   return password ? btoa(password + ":" + base64Data) : base64Data;
 }
@@ -107,7 +105,6 @@ function encodeData(data, password = "") {
 function decodeData(encodedStr, password = "") {
   try {
     let decodedStr = atob(encodedStr);
-    // If password was used, ensure the prefix matches
     if (password) {
       const prefix = password + ":";
       if (decodedStr.startsWith(prefix)) {
@@ -136,7 +133,6 @@ async function uploadTodoList() {
     return;
   }
 
-  // Create payload
   const payload = {
     label,
     todos,
@@ -145,7 +141,6 @@ async function uploadTodoList() {
 
   let finalPayload = payload;
 
-  // If encode mode is enabled, prompt for a password/pin and encode the entire payload
   if (encodeDataCheckbox.checked) {
     const password = prompt("Enter a password or PIN to encode your data:");
     if (password === null || password.trim() === "") {
@@ -156,15 +151,14 @@ async function uploadTodoList() {
   }
 
   try {
-    // Create the record in the database and retrieve the created record.
     const createdRecord = await room.collection('todoList').create(finalPayload);
     alert("Todo list uploaded successfully!");
     
-    // Show the final valid URL to share with others
-    const shareUrl = `${window.location.origin}${window.location.pathname}?list=${createdRecord.id}`;
+    // Use the provided base URL with query string for sharing
+    const shareUrl = `https://websim.ai/@api/todo-list-app/?list=${createdRecord.id}`;
     alert(`Share this URL with others: ${shareUrl}`);
     
-    // Optionally, clear the list or label here
+    // Optionally clear the list or label after upload
     todos = [];
     renderTodos();
     listLabelInput.value = "";
@@ -181,10 +175,7 @@ async function loadTodoListFromQuery() {
   if (!listId) return;
 
   try {
-    // Assuming room.collection('todoList').get accepts an id to fetch a single record
-    // If not, you might need to filter by id from getList()
     let record;
-    // Trying to get record by id; if not supported, use getList filtering:
     if (room.collection('todoList').get) {
       record = await room.collection('todoList').get(listId);
     } else {
@@ -197,7 +188,6 @@ async function loadTodoListFromQuery() {
       return;
     }
     
-    // Check if the record has encodedData
     if (record.encodedData) {
       const password = prompt("This todo list is encoded. Please enter the password or PIN to decode:");
       if (password === null || password.trim() === "") {
@@ -205,11 +195,9 @@ async function loadTodoListFromQuery() {
         return;
       }
       const decoded = decodeData(record.encodedData, password.trim());
-      // Set the UI with decoded data
       listLabelInput.value = decoded.label || "";
       todos = decoded.todos || [];
     } else {
-      // If it's not encoded, load directly
       listLabelInput.value = record.label || "";
       todos = record.todos || [];
     }
